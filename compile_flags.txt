@@ -4,6 +4,6 @@ C:\Users\JWatson\source\zig\lib\include
 -isystem
 C:\Users\JWatson\source\zig\lib\libc\include\any-windows-any
 -isystem
-C:\Users\JWatson\source\zig\lib\libc\include\x86_64-windows-gnu
--isystem
 C:\Users\JWatson\source\zig\lib\libc\include\generic-glibc
+-isystem
+C:\Users\Jacob W\source\zig\lib\libc\glibc\include
