@@ -4,6 +4,12 @@ const io = std.Io;
 const fileName = "table";
 const dirName = "zig-out/bin/db";
 
+const token = enum {
+    create, alter, delete, insert, database, table, column
+};
+
+
+
 fn createTable(process_io: io) !void {
     const cwd: std.Io.Dir = std.Io.Dir.cwd();
     cwd.createDir(process_io, dirName, .default_dir) catch |e| switch (e) {
@@ -40,6 +46,80 @@ fn readTable(process_io: io) !void {
 }
 
 
+fn tokenize(input: []const u8) !token {
+
+    if (std.ascii.eqlIgnoreCase(input, "create")) {
+        return token.create;
+    }
+
+    if (std.ascii.eqlIgnoreCase(input, "delete")) {
+        return token.delete;
+    }
+
+    if (std.ascii.eqlIgnoreCase(input, "alter")) {
+        return token.alter;
+    }
+
+    if (std.ascii.eqlIgnoreCase(input, "insert")) {
+        return token.insert;
+    }
+
+    if (std.ascii.eqlIgnoreCase(input, "database")) {
+        return token.database;
+    }
+
+    if (std.ascii.eqlIgnoreCase(input, "table")) {
+        return token.table;
+    }
+
+    if (std.ascii.eqlIgnoreCase(input, "column")) {
+        return token.column;
+    }
+
+    return error.NoMatchedToken;
+}
+
+fn create(process_io: io, tok: token, args: []const u8) !void {
+    const cwd: std.Io.Dir = std.Io.Dir.cwd();
+    switch (tok) {
+        .database => {
+            cwd.createDir(process_io, args, .default_dir) catch |e| switch (e) {
+                error.PathAlreadyExists => {
+                    std.debug.print("Warning: Dir already exists: {s}\n", .{"db"});
+                },
+                else => return e,
+            };
+        },
+        .table => {
+            var db_dir: std.Io.Dir = try cwd.openDir(process_io, dirName, .{});
+            defer db_dir.close(process_io);
+
+            const file: std.Io.File = try db_dir.createFile(process_io, fileName, .{});
+            defer file.close(process_io);
+        }
+    }
+
+}
+
+const TokenList = struct {
+    token_list: [16]token,
+    index: usize,
+    size: usize,
+
+    fn add(self: *TokenList, tok: token) void {
+        if (self.size == null) {
+            self.size = 0;
+        }
+        self.token_list[self.size] = tok;
+        self.size = self.size + 1;
+        return;
+    }
+    
+    fn peek(self: *TokenList) void {
+    }
+
+};
+
 pub fn main(init: std.process.Init) !void {
     var input: [1024]u8 = undefined;
     var output: [1024]u8 = undefined;
@@ -69,15 +149,14 @@ pub fn main(init: std.process.Init) !void {
             break;
         }
 
-        if (std.ascii.eqlIgnoreCase(cmd, "create-table")) {
-            try createTable(process_io);
-            try stdout.writeAll("created table\n");
-            try stdout.flush();
+        var token_list: [16]token = undefined;
+        var tok = std.mem.tokenizeSequence(u8, cmd, " ");
+        for (tok.next(), tok.index..) |arg, i| {
+          std.debug.print("cmd arg: {s}\n", .{arg});
+          token = try tokenize(arg);
+          token_list[i] = token;
         }
 
-        if (std.ascii.eqlIgnoreCase(cmd, "read-table")) {
-            try readTable(process_io);
-        }
 
     }
 }
