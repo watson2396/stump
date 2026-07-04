@@ -19,10 +19,12 @@ I'm stumped.
 
 # how do LSMs work?
 
-- in memory buffers
+- in memory buffers, memtable
 - on disk structures
 - batched writes
 - compaction
+- multi-level search
+
 
 
 
