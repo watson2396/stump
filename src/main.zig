@@ -9,7 +9,6 @@ const token = enum {
 };
 
 
-
 fn createTable(process_io: io) !void {
     const cwd: std.Io.Dir = std.Io.Dir.cwd();
     cwd.createDir(process_io, dirName, .default_dir) catch |e| switch (e) {
