@@ -4,54 +4,21 @@ const mem = std.mem;
 
 const lsm = @import("lsm.zig");
 
-const fileName = "table";
-const dirName = "zig-out/bin/db";
-
-
-fn createTable(process_io: io) !void {
-    const cwd: std.Io.Dir = std.Io.Dir.cwd();
-    cwd.createDir(process_io, dirName, .default_dir) catch |e| switch (e) {
-        error.PathAlreadyExists => {
-            std.debug.print("Warning: Dir already exists: {s}\n", .{"db"});
-        },
-        else => return e,
-    };
-
-    var db_dir: std.Io.Dir = try cwd.openDir(process_io, dirName, .{});
-    defer db_dir.close(process_io);
-
-    const file: std.Io.File = try db_dir.createFile(process_io, fileName, .{});
-    defer file.close(process_io);
-
-    var file_writer = file.writer(process_io, &.{});
-    const writer = &file_writer.interface;
-
-    const byte_written = try writer.write("It's zigling time!\n");
-    std.debug.print("Successfully wrote {d} bytes.\n", .{byte_written});
-}
-
-fn readTable(process_io: io) !void {
-    const cwd: std.Io.Dir = std.Io.Dir.cwd();
-    var db_dir: std.Io.Dir = try cwd.openDir(process_io, dirName, .{});
-    defer db_dir.close(process_io);
-
-    var file_read_buffer: [1024]u8 = undefined; 
-    const contents = try db_dir.readFile(process_io, fileName, &file_read_buffer);
-    var tok = std.mem.tokenizeSequence(u8, contents, "\n");
-    while (tok.next()) |line| {
-      std.debug.print("line: {s}\n", .{line});
-    }
-}
 
 pub fn main(init: std.process.Init) !void {
-    var input: [1024]u8 = undefined;
-    var output: [1024]u8 = undefined;
     const process_io = init.io;
-    const allocator = init.gpa; 
+    const arena = init.arena.allocator();
 
-    var memtable = lsm.Memtable.init(allocator);
+    // var arena_allocator: std.heap.ArenaAllocator = .init(std.heap.page_allocator);
+    // defer arena_allocator.deinit();
+    // const arena = arena_allocator.allocator();
+
+    var memtable = try lsm.Memtable.init(arena);
+
     const prng: std.Random.IoSource = .{.io = process_io};
 
+    var input: [1024]u8 = undefined;
+    var output: [1024]u8 = undefined;
     while (true) {
         var stdin_reader: io.File.Reader = io.File.stdin().reader(process_io, &input);
         var stdout_writer: io.File.Writer = io.File.stdout().writer(process_io, &output);
@@ -76,13 +43,19 @@ pub fn main(init: std.process.Init) !void {
             break;
         }
 
+        if (std.ascii.eqlIgnoreCase(cmd, "exit")) {
+            try stdout.writeAll("goodbye\n");
+            try stdout.flush();
+            break;
+        }
+
         if (std.ascii.eqlIgnoreCase(cmd, "run")) {
             const rand = prng.interface();
             const keyval = rand.int(u8);
             const valval = rand.int(u8);
             std.debug.print("key: {}, value: {}\n", .{keyval, valval});
             const tuple: lsm.Tuple = lsm.Tuple.init(keyval, valval);
-            _ = try memtable.append(tuple);
+            memtable.append(tuple);
         }
     }
 }
