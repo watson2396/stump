@@ -25,7 +25,8 @@ I'm stumped.
 - compaction
 - multi-level search
 
-
+- https://www.darchuletajr.com/blog/lsm-trees-memtables-sorted-string-tables-introduction
+- https://dev.to/justlorain/building-an-lsm-tree-storage-engine-from-scratch-3eom
 
 
 

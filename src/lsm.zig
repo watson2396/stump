@@ -46,7 +46,6 @@ pub const Memtable = struct {
 
 pub const PersistTable = struct {
     values: []Tuple,
-
 };
 
 
