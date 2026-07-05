@@ -8,13 +8,6 @@ const VALUES_MAX_SIZE: u8 = 128;
 pub const Tuple = struct {
     key: u8,
     value: u8,
-
-    pub fn init(keyval: u8, valval: u8) Tuple {
-        return Tuple {
-            .key = keyval,
-            .value = valval
-        };
-    }
 };
 
 pub const Memtable = struct {
@@ -37,9 +30,23 @@ pub const Memtable = struct {
             return;
         }
         debug.print("memtable value array at max size\n", .{});
+        for (self.values) |val| {
+            debug.print("key: {}, value: {}\n", .{val.key, val.value});
+        }
         return;
+    }
+
+    pub fn dump(self: *Memtable) void {
+        for (self.values, 0..) |val, idx| {
+            if (idx > self.index) return;
+            debug.print("key: {}, value: {}\n", .{val.key, val.value});
+        }
     }
 };
 
+pub const PersistTable = struct {
+    values: []Tuple,
+
+};
 
 

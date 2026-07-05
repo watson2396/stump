@@ -26,9 +26,6 @@ pub fn main(init: std.process.Init) !void {
         var stdin: *io.Reader = &stdin_reader.interface;
         var stdout: *io.Writer = &stdout_writer.interface;
 
-        try stdout.writeAll("Hello World\n");
-        try stdout.flush();
-
         try stdout.writeAll("Enter cmd: ");
         try stdout.flush();
 
@@ -54,8 +51,12 @@ pub fn main(init: std.process.Init) !void {
             const keyval = rand.int(u8);
             const valval = rand.int(u8);
             std.debug.print("key: {}, value: {}\n", .{keyval, valval});
-            const tuple: lsm.Tuple = lsm.Tuple.init(keyval, valval);
+            const tuple: lsm.Tuple = lsm.Tuple{.key = keyval, .value = valval};
             memtable.append(tuple);
+        }
+
+        if (std.ascii.eqlIgnoreCase(cmd, "dump")) {
+            memtable.dump();
         }
     }
 }
