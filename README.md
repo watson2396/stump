@@ -70,6 +70,10 @@ look it up. Bloom filters are good for single key lookups.
 once relevant range is found, a bloom filter is checked to see if the key _might_ be there. If it is not then move on or return. 
 If it _might_ be then the range is more closely checked.
 
+## consistency and level management
+Files correspond to the file system but levels are purely logical and are managed by the LSM-tree impl. Typically a global catalog and manifest
+of the immutable files is maintained, in-memory and persisted to disk. These describe the files and level relationship, and which files consist
+of the current snapshot.
 
 # references
 - https://www.darchuletajr.com/blog/lsm-trees-memtables-sorted-string-tables-introduction
